@@ -11,3 +11,9 @@ Upskilling in Terraform and Azure DevOps
  - Infrastructure is set up using Terraform 0.12.24 and azurerm provider 2.5.0
  - Have a DevOps Release Pipline deploy Terraform with statefiles in appropriate storage account
  
+
+
+ ## Steps
+
+1. Create a Azure Storage Account and a Container
+2. 
