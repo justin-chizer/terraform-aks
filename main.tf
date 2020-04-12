@@ -63,11 +63,126 @@ resource "azurerm_kubernetes_cluster" "aks" {
     vnet_subnet_id = azurerm_subnet.aks.id
     min_count  = 1
     max_count  = 10
-    node_count = 3
 
   }
 
   identity {
     type = "SystemAssigned"
   }
+}
+
+############################################################################
+
+
+
+#Creates VNet for VM
+resource "azurerm_virtual_network" "vm" {
+  name                = "vmvnet"
+  location            = azurerm_resource_group.aks.location
+  resource_group_name = azurerm_resource_group.aks.name
+  address_space       = ["10.1.0.0/16"]
+
+  ddos_protection_plan {
+    id     = azurerm_network_ddos_protection_plan.aks.id
+    enable = true
+  }
+
+  tags = {
+    environment = "Production"
+  }
+}
+
+# Create the VM Subnet
+resource "azurerm_subnet" "vm" {
+  name                 = "vmsubnet"
+  resource_group_name  = azurerm_resource_group.aks.name
+  virtual_network_name = azurerm_virtual_network.vm.name
+  address_prefix       = "10.1.0.0/24"
+}
+
+resource "azurerm_network_interface" "vm" {
+  name                = "vm-nic"
+  location            = azurerm_resource_group.aks.location
+  resource_group_name = azurerm_resource_group.aks.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.vm.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+
+resource "azurerm_linux_virtual_machine" "vm" {
+  name                = "debianvm"
+  resource_group_name = azurerm_resource_group.aks.name
+  location            = azurerm_resource_group.aks.location
+  size                = "Standard_DS2_v2"
+  admin_username      = "adminuser"
+  network_interface_ids = [
+    azurerm_network_interface.vm.id,
+  ]
+
+  admin_ssh_key {
+    username   = "adminuser"
+    public_key = file("~/.ssh/id_rsa.pub")
+  }
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Debian"
+    offer     = "debian-10"
+    sku       = "10"
+    version   = "latest"
+  }
+}
+
+
+
+resource "azurerm_subnet" "bastion" {
+  name                 = "AzureBastionSubnet"
+  resource_group_name  = azurerm_resource_group.aks.name
+  virtual_network_name = azurerm_virtual_network.vm.name
+  address_prefix       = "10.1.1.0/27"
+}
+
+
+resource "azurerm_public_ip" "bastion" {
+  name                = "vmpip"
+  location            = azurerm_resource_group.aks.location
+  resource_group_name = azurerm_resource_group.aks.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+resource "azurerm_bastion_host" "bastion" {
+  name                = "debionbastion"
+  location            = azurerm_resource_group.aks.location
+  resource_group_name = azurerm_resource_group.aks.name
+
+  ip_configuration {
+    name                 = "configuration"
+    subnet_id            = azurerm_subnet.bastion.id
+    public_ip_address_id = azurerm_public_ip.bastion.id
+  }
+}
+
+
+# Peer the VNets
+resource "azurerm_virtual_network_peering" "aks" {
+  name                      = "akstovm"
+  resource_group_name       = azurerm_resource_group.aks.name
+  virtual_network_name      = azurerm_virtual_network.aks.name
+  remote_virtual_network_id = azurerm_virtual_network.vm.id
+}
+
+resource "azurerm_virtual_network_peering" "vm" {
+  name                      = "vmtoaks"
+  resource_group_name       = azurerm_resource_group.aks.name
+  virtual_network_name      = azurerm_virtual_network.vm.name
+  remote_virtual_network_id = azurerm_virtual_network.aks.id
 }
