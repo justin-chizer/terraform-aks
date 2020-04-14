@@ -5,32 +5,13 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: TerraformInstaller@0
+- task: CopyFiles@2
   inputs:
-    terraformVersion: '0.12.24'
+    Contents: '**'
+    TargetFolder: '$(build.artifactsstagingdirectory)terraform'
 
-# Starter pipeline
-- task: TerraformTaskV1@0
-
+- task: PublishBuildArtifacts@1
   inputs:
-    provider: 'azurerm'
-    command: 'init'
-    backendServiceArm: 'bterkaly-juchizer(191f97dd-acdd-423c-aad7-b966e3511182)'
-    backendAzureRmResourceGroupName: 'terraformsa'
-    backendAzureRmStorageAccountName: 'chizerterraform'
-    backendAzureRmContainerName: 'tfstate'
-    backendAzureRmKey: 'prod.terraform.tfstate'
-
-
-- task: TerraformTaskV1@0
-  inputs:
-    provider: 'azurerm'
-    command: 'plan'
-    environmentServiceNameAzureRM: 'bterkaly-juchizer(191f97dd-acdd-423c-aad7-b966e3511182)'
-
-
-- task: TerraformTaskV1@0
-  inputs:
-    provider: 'azurerm'
-    command: 'apply'
-    environmentServiceNameAzureRM: 'bterkaly-juchizer(191f97dd-acdd-423c-aad7-b966e3511182)'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
