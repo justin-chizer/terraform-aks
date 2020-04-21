@@ -3,7 +3,7 @@ variable "location" {
 }
 
 variable "resource_group_name" {
-  
+
 }
 
 variable "vnet_name" {
@@ -16,7 +16,7 @@ variable "address_space" {
 
 
 variable "subnet_name" {
-  
+
 }
 
 variable "address_prefix" {
@@ -24,9 +24,9 @@ variable "address_prefix" {
 }
 
 variable "environment" {
-  
+
 }
 
 variable "ddos_protection_plan_id" {
-  
+
 }
