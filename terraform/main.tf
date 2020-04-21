@@ -11,34 +11,49 @@ resource "azurerm_network_ddos_protection_plan" "aks" {
   resource_group_name = azurerm_resource_group.aks.name
 }
 
-#Creates VNet and Subnet
-resource "azurerm_virtual_network" "aks" {
-  name                = "aksvnet"
-  location            = azurerm_resource_group.aks.location
-  resource_group_name = azurerm_resource_group.aks.name
-  address_space       = ["10.0.0.0/16"]
+# #Creates VNet and Subnet
+# resource "azurerm_virtual_network" "aks" {
+#   name                = "aksvnet"
+#   location            = azurerm_resource_group.aks.location
+#   resource_group_name = azurerm_resource_group.aks.name
+#   address_space       = ["10.0.0.0/16"]
 
-  ddos_protection_plan {
-    id     = azurerm_network_ddos_protection_plan.aks.id
-    enable = true
-  }
+#   ddos_protection_plan {
+#     id     = azurerm_network_ddos_protection_plan.aks.id
+#     enable = true
+#   }
 
-  tags = {
-    environment = "Production"
-  }
+#   tags = {
+#     environment = "Production"
+#   }
+# }
+
+# # Create the AKS Subnet
+# resource "azurerm_subnet" "aks" {
+#   name                 = "akssubnet"
+#   resource_group_name  = azurerm_resource_group.aks.name
+#   virtual_network_name = azurerm_virtual_network.aks.name
+#   address_prefix       = "10.0.0.0/22"
+# }
+
+
+
+module "VNet-aks" {
+  source                  = "./modules/azure-vnet"
+  location                = azurerm_resource_group.aks.location
+  resource_group_name     = azurerm_resource_group.aks.name
+  vnet_name                = "AKSVNet"
+  address_space           = ["10.0.0.0/16"]
+  ddos_protection_plan_id = azurerm_network_ddos_protection_plan.aks.id
+  subnet_name             = "AKSsubnet"
+  address_prefix          = "10.0.0.0/22"
+  environment             = "prod"  
 }
 
-# Create the AKS Subnet
-resource "azurerm_subnet" "aks" {
-  name                 = "akssubnet"
-  resource_group_name  = azurerm_resource_group.aks.name
-  virtual_network_name = azurerm_virtual_network.aks.name
-  address_prefix       = "10.0.0.0/22"
-}
 
 # Create AKS
 resource "azurerm_kubernetes_cluster" "aks" {
-  name                = "disneyaks"
+  name                = "disneyaks2"
   location            = azurerm_resource_group.aks.location
   resource_group_name = azurerm_resource_group.aks.name
   dns_prefix          = "disneyaksdns"
@@ -60,11 +75,15 @@ resource "azurerm_kubernetes_cluster" "aks" {
     enable_auto_scaling = true
     max_pods   = 50
     vm_size    = "Standard_DS2_v2"
-    vnet_subnet_id = azurerm_subnet.aks.id
+    vnet_subnet_id = module.VNet-aks.subnet_id
     min_count  = 1
     max_count  = 10
+    node_count = 3
 
   }
+   lifecycle {
+      ignore_changes = [default_node_pool[0].node_count]
+    }
 
   identity {
     type = "SystemAssigned"
@@ -176,7 +195,7 @@ resource "azurerm_bastion_host" "bastion" {
 resource "azurerm_virtual_network_peering" "aks" {
   name                      = "akstovm"
   resource_group_name       = azurerm_resource_group.aks.name
-  virtual_network_name      = azurerm_virtual_network.aks.name
+  virtual_network_name      = module.VNet-aks.virtual_network_name
   remote_virtual_network_id = azurerm_virtual_network.vm.id
 }
 
@@ -184,5 +203,5 @@ resource "azurerm_virtual_network_peering" "vm" {
   name                      = "vmtoaks"
   resource_group_name       = azurerm_resource_group.aks.name
   virtual_network_name      = azurerm_virtual_network.vm.name
-  remote_virtual_network_id = azurerm_virtual_network.aks.id
+  remote_virtual_network_id = module.VNet-aks.virtual_network_id
 }
