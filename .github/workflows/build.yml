@@ -12,7 +12,6 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
             
-jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
