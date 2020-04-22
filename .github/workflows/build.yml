@@ -4,17 +4,14 @@ on:
     branches: [ master ]
 jobs:
 
-  build-and-deploy:
+  terraform:
     runs-on: ubuntu-latest
     steps:
     
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-            
-  terraform:
-    name: 'Terraform'
-    runs-on: ubuntu-latest
+    
     steps:
       - name: 'Checkout'
         uses: actions/checkout@master
