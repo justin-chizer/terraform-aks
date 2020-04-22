@@ -1,5 +1,5 @@
 # Create a resource group
-resource "azurerm_resource_group" "aks" {
+resource "azurerm_resource_group" "demo" {
   name     = var.rg
   location = var.region
 }
@@ -11,33 +11,7 @@ resource "azurerm_network_ddos_protection_plan" "aks" {
   resource_group_name = azurerm_resource_group.aks.name
 }
 
-# #Creates VNet and Subnet
-# resource "azurerm_virtual_network" "aks" {
-#   name                = "aksvnet"
-#   location            = azurerm_resource_group.aks.location
-#   resource_group_name = azurerm_resource_group.aks.name
-#   address_space       = ["10.0.0.0/16"]
-
-#   ddos_protection_plan {
-#     id     = azurerm_network_ddos_protection_plan.aks.id
-#     enable = true
-#   }
-
-#   tags = {
-#     environment = "Production"
-#   }
-# }
-
-# # Create the AKS Subnet
-# resource "azurerm_subnet" "aks" {
-#   name                 = "akssubnet"
-#   resource_group_name  = azurerm_resource_group.aks.name
-#   virtual_network_name = azurerm_virtual_network.aks.name
-#   address_prefix       = "10.0.0.0/22"
-# }
-
-
-
+#Creates VNet and Subnet
 module "VNet-aks" {
   source                  = "./modules/azure-vnet"
   location                = azurerm_resource_group.aks.location
@@ -52,43 +26,24 @@ module "VNet-aks" {
 
 
 # Create AKS
-resource "azurerm_kubernetes_cluster" "aks" {
-  name                = "disneyaks2"
-  location            = azurerm_resource_group.aks.location
-  resource_group_name = azurerm_resource_group.aks.name
-  dns_prefix          = "disneyaksdns"
-  kubernetes_version  = "1.16.7"
-
-
-  network_profile {
-    network_plugin     = "azure"
-    network_policy     = "azure"
-    docker_bridge_cidr = "172.17.0.1/16"
-    service_cidr       = "192.168.0.0/16"
-    dns_service_ip     = "192.168.0.10"
-    load_balancer_sku  = "Standard"
-  }
-
-  default_node_pool {
-    name                = "default"
-    type                = "VirtualMachineScaleSets"
-    enable_auto_scaling = true
-    max_pods            = 50
-    vm_size             = "Standard_DS2_v2"
-    vnet_subnet_id      = module.VNet-aks.subnet_id
-    min_count           = 1
-    max_count           = 10
-    node_count          = 3
-
-  }
-  lifecycle {
-    ignore_changes = [default_node_pool[0].node_count]
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
+module "aks-1" {
+  source                       = "./modules/aks"
+  aks_name                     = "aksdemoapril"
+  location                     = azurerm_resource_group.aks.location
+  resource_group_name          = azurerm_resource_group.aks.name
+  kubernetes_version           = "1.16.7"
+  network_plugin               = "azure"
+  network_policy               = "azure"
+  service_cidr                 = "192.168.0.0/16"
+  dns_service_ip               = "192.168.0.10"
+  vnet_subnet_id               = module.VNet-aks.subnet_id
+  default_node_pool_max_pods   = 50
+  default_node_pool_vm_size    = "Standard_D2s_v3"
+  default_node_pool_min_count  = 1
+  default_node_pool_max_count  = 10
+  default_node_pool_node_count = 3
 }
+
 
 ############################################################################
 
