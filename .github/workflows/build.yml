@@ -3,6 +3,16 @@ on:
   push:
     branches: [ master ]
 jobs:
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+            
+jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
