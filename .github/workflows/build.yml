@@ -2,22 +2,18 @@ name: 'Terraform GitHub Actions'
 on:
   push:
     branches: [ master, dev ]
-jobs:
-
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-    
-    - uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
             
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
     steps:
+      - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: 'Checkout'
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
+        path: ./terraform
       - name: 'Terraform Format'
         uses: hashicorp/terraform-github-actions@master
         with:

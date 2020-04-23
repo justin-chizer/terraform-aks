@@ -47,33 +47,20 @@ module "aks-1" {
 
 ############################################################################
 
-
-
-#Creates VNet for VM
-resource "azurerm_virtual_network" "vm" {
-  name                = "vmvnet"
-  location            = azurerm_resource_group.demo.location
-  resource_group_name = azurerm_resource_group.demo.name
-  address_space       = ["10.1.0.0/16"]
-
-  ddos_protection_plan {
-    id     = azurerm_network_ddos_protection_plan.demo.id
-    enable = true
-  }
-
-  tags = {
-    environment = "Production"
-  }
+#Creates VNet and Subnet
+module "VNet-vm" {
+  source                  = "./modules/azure-vnet"
+  location                = azurerm_resource_group.demo.location
+  resource_group_name     = azurerm_resource_group.demo.name
+  vnet_name               = "vmvnet"
+  address_space           = ["10.1.0.0/16"]
+  ddos_protection_plan_id = azurerm_network_ddos_protection_plan.demo.id
+  subnet_name             = "vmsubnet"
+  address_prefix          = "10.1.0.0/24"
+  environment             = "prod"
 }
 
-# Create the VM Subnet
-resource "azurerm_subnet" "vm" {
-  name                 = "vmsubnet"
-  resource_group_name  = azurerm_resource_group.demo.name
-  virtual_network_name = azurerm_virtual_network.vm.name
-  address_prefix       = "10.1.0.0/24"
-}
-
+# Create the Debian
 resource "azurerm_network_interface" "vm" {
   name                = "vm-nic"
   location            = azurerm_resource_group.demo.location
@@ -81,7 +68,7 @@ resource "azurerm_network_interface" "vm" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = azurerm_subnet.vm.id
+    subnet_id                     = module.VNet-vm.virtual_network_id
     private_ip_address_allocation = "Dynamic"
   }
 }
@@ -121,7 +108,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 resource "azurerm_subnet" "bastion" {
   name                 = "AzureBastionSubnet"
   resource_group_name  = azurerm_resource_group.demo.name
-  virtual_network_name = azurerm_virtual_network.vm.name
+  virtual_network_name = module.VNet-vm.virtual_network_name
   address_prefix       = "10.1.1.0/27"
 }
 
@@ -146,18 +133,17 @@ resource "azurerm_bastion_host" "bastion" {
   }
 }
 
-
 # Peer the VNets
 resource "azurerm_virtual_network_peering" "aks" {
   name                      = "akstovm"
   resource_group_name       = azurerm_resource_group.demo.name
   virtual_network_name      = module.VNet-aks.virtual_network_name
-  remote_virtual_network_id = azurerm_virtual_network.vm.id
+  remote_virtual_network_id = module.VNet-vm.virtual_network_id
 }
 
 resource "azurerm_virtual_network_peering" "vm" {
   name                      = "vmtoaks"
   resource_group_name       = azurerm_resource_group.demo.name
-  virtual_network_name      = azurerm_virtual_network.vm.name
+  virtual_network_name      = module.VNet-vm.virtual_network_name
   remote_virtual_network_id = module.VNet-aks.virtual_network_id
 }
