@@ -5,20 +5,20 @@ resource "azurerm_resource_group" "demo" {
 }
 
 # Upgrades to Standard Ddos protection
-resource "azurerm_network_ddos_protection_plan" "aks" {
+resource "azurerm_network_ddos_protection_plan" "demo" {
   name                = "ddospplan1"
-  location            = azurerm_resource_group.aks.location
-  resource_group_name = azurerm_resource_group.aks.name
+  location            = azurerm_resource_group.demo.location
+  resource_group_name = azurerm_resource_group.demo.name
 }
 
 #Creates VNet and Subnet
 module "VNet-aks" {
   source                  = "./modules/azure-vnet"
-  location                = azurerm_resource_group.aks.location
-  resource_group_name     = azurerm_resource_group.aks.name
+  location                = azurerm_resource_group.demo.location
+  resource_group_name     = azurerm_resource_group.demo.name
   vnet_name               = "AKSVNet"
   address_space           = ["10.0.0.0/16"]
-  ddos_protection_plan_id = azurerm_network_ddos_protection_plan.aks.id
+  ddos_protection_plan_id = azurerm_network_ddos_protection_plan.demo.id
   subnet_name             = "AKSsubnet"
   address_prefix          = "10.0.0.0/22"
   environment             = "prod"
@@ -29,8 +29,8 @@ module "VNet-aks" {
 module "aks-1" {
   source                       = "./modules/aks"
   aks_name                     = "aksdemoapril"
-  location                     = azurerm_resource_group.aks.location
-  resource_group_name          = azurerm_resource_group.aks.name
+  location                     = azurerm_resource_group.demo.location
+  resource_group_name          = azurerm_resource_group.demo.name
   kubernetes_version           = "1.16.7"
   network_plugin               = "azure"
   network_policy               = "azure"
@@ -52,12 +52,12 @@ module "aks-1" {
 #Creates VNet for VM
 resource "azurerm_virtual_network" "vm" {
   name                = "vmvnet"
-  location            = azurerm_resource_group.aks.location
-  resource_group_name = azurerm_resource_group.aks.name
+  location            = azurerm_resource_group.demo.location
+  resource_group_name = azurerm_resource_group.demo.name
   address_space       = ["10.1.0.0/16"]
 
   ddos_protection_plan {
-    id     = azurerm_network_ddos_protection_plan.aks.id
+    id     = azurerm_network_ddos_protection_plan.demo.id
     enable = true
   }
 
@@ -69,15 +69,15 @@ resource "azurerm_virtual_network" "vm" {
 # Create the VM Subnet
 resource "azurerm_subnet" "vm" {
   name                 = "vmsubnet"
-  resource_group_name  = azurerm_resource_group.aks.name
+  resource_group_name  = azurerm_resource_group.demo.name
   virtual_network_name = azurerm_virtual_network.vm.name
   address_prefix       = "10.1.0.0/24"
 }
 
 resource "azurerm_network_interface" "vm" {
   name                = "vm-nic"
-  location            = azurerm_resource_group.aks.location
-  resource_group_name = azurerm_resource_group.aks.name
+  location            = azurerm_resource_group.demo.location
+  resource_group_name = azurerm_resource_group.demo.name
 
   ip_configuration {
     name                          = "internal"
@@ -89,19 +89,19 @@ resource "azurerm_network_interface" "vm" {
 
 resource "azurerm_linux_virtual_machine" "vm" {
   name                = "debianvm"
-  resource_group_name = azurerm_resource_group.aks.name
-  location            = azurerm_resource_group.aks.location
-  size                = "Standard_DS2_v2"
+  resource_group_name = azurerm_resource_group.demo.name
+  location            = azurerm_resource_group.demo.location
+  size                = "Standard_D2S_v3"
   admin_username      = "adminuser"
+  admin_password = "Password!23"
   network_interface_ids = [
     azurerm_network_interface.vm.id,
   ]
 
-  admin_ssh_key {
-    username = "adminuser"
-    #public_key = file("~/.ssh/id_rsa.pub")
-    admin_password = "Password!23"
-  }
+  # admin_ssh_key {
+  #   username = "adminuser"
+  #   public_key = file("~/.ssh/id_rsa.pub")
+  # }
 
   os_disk {
     caching              = "ReadWrite"
@@ -120,7 +120,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
 resource "azurerm_subnet" "bastion" {
   name                 = "AzureBastionSubnet"
-  resource_group_name  = azurerm_resource_group.aks.name
+  resource_group_name  = azurerm_resource_group.demo.name
   virtual_network_name = azurerm_virtual_network.vm.name
   address_prefix       = "10.1.1.0/27"
 }
@@ -128,16 +128,16 @@ resource "azurerm_subnet" "bastion" {
 
 resource "azurerm_public_ip" "bastion" {
   name                = "vmpip"
-  location            = azurerm_resource_group.aks.location
-  resource_group_name = azurerm_resource_group.aks.name
+  location            = azurerm_resource_group.demo.location
+  resource_group_name = azurerm_resource_group.demo.name
   allocation_method   = "Static"
   sku                 = "Standard"
 }
 
 resource "azurerm_bastion_host" "bastion" {
   name                = "debionbastion"
-  location            = azurerm_resource_group.aks.location
-  resource_group_name = azurerm_resource_group.aks.name
+  location            = azurerm_resource_group.demo.location
+  resource_group_name = azurerm_resource_group.demo.name
 
   ip_configuration {
     name                 = "configuration"
@@ -150,14 +150,14 @@ resource "azurerm_bastion_host" "bastion" {
 # Peer the VNets
 resource "azurerm_virtual_network_peering" "aks" {
   name                      = "akstovm"
-  resource_group_name       = azurerm_resource_group.aks.name
+  resource_group_name       = azurerm_resource_group.demo.name
   virtual_network_name      = module.VNet-aks.virtual_network_name
   remote_virtual_network_id = azurerm_virtual_network.vm.id
 }
 
 resource "azurerm_virtual_network_peering" "vm" {
   name                      = "vmtoaks"
-  resource_group_name       = azurerm_resource_group.aks.name
+  resource_group_name       = azurerm_resource_group.demo.name
   virtual_network_name      = azurerm_virtual_network.vm.name
   remote_virtual_network_id = module.VNet-aks.virtual_network_id
 }
