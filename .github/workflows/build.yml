@@ -2,7 +2,8 @@ name: 'Terraform GitHub Actions'
 on:
   push:
     branches: [ master, dev ]
-            
+
+jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
