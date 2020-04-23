@@ -7,9 +7,10 @@ on:
     name: 'Terraform'
     runs-on: ubuntu-latest
     steps:
-      - uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: 'login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: 'Checkout'
         uses: actions/checkout@v2
