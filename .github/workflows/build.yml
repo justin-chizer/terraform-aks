@@ -18,15 +18,17 @@ jobs:
     
     - run: |
         az account list -o table
+
+
+
+    - name: 'Checkout'
+      uses: actions/checkout@v2
+    - run: |
         cd './terraform'
         terraform fmt -recursive -check
         terraform init
         terraform validate
         terraform plan
-
-
-    # - name: 'Checkout'
-    #   uses: actions/checkout@v2
     # - name: 'Terraform Format'
     #   uses: hashicorp/terraform-github-actions@master
     #   with:
