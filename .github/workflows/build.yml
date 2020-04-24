@@ -15,7 +15,8 @@ jobs:
 
       - name: 'Checkout'
         uses: actions/checkout@v2
-        path: ./terraform
+        with:
+          path: ./terraform
       - name: 'Terraform Format'
         uses: hashicorp/terraform-github-actions@master
         with:
