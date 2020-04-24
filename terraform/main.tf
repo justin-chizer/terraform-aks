@@ -80,7 +80,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   location            = azurerm_resource_group.demo.location
   size                = "Standard_D2S_v3"
   admin_username      = "adminuser"
-  admin_password = "Password!23"
+  admin_password      = "Password!23"
   network_interface_ids = [
     azurerm_network_interface.vm.id,
   ]
