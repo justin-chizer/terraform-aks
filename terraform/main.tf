@@ -75,12 +75,13 @@ resource "azurerm_network_interface" "vm" {
 
 
 resource "azurerm_linux_virtual_machine" "vm" {
-  name                = "debianvm"
-  resource_group_name = azurerm_resource_group.demo.name
-  location            = azurerm_resource_group.demo.location
-  size                = "Standard_D2S_v3"
-  admin_username      = "adminuser"
-  admin_password      = "Password!23"
+  name                            = "debianvm"
+  resource_group_name             = azurerm_resource_group.demo.name
+  location                        = azurerm_resource_group.demo.location
+  size                            = "Standard_D2S_v3"
+  admin_username                  = "adminuser"
+  admin_password                  = "Password!23"
+  disable_password_authentication = false
   network_interface_ids = [
     azurerm_network_interface.vm.id,
   ]
