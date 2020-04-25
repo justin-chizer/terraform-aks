@@ -18,8 +18,7 @@ jobs:
 
     - run: |
         az account list -o table
-        echo ${{ secrets.AZURE_CREDENTIALS.client_id}}
-
+       
     - name: 'Checkout'
       uses: actions/checkout@v2
     - name: 'Terraform Format'
@@ -57,6 +56,6 @@ jobs:
         tf_actions_subcommand: 'plan'
         tf_actions_working_dir: ${{ env.tf_working_dir }}
         tf_actions_comment: true
-        args: ${{ secrets.AZURE_CREDENTIALS }}
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
