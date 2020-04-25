@@ -68,7 +68,7 @@ resource "azurerm_network_interface" "vm" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = module.VNet-vm.azurerm_subnet.subnet.id
+    subnet_id                     = module.VNet-vm.subnet_id
     private_ip_address_allocation = "Dynamic"
   }
 }
