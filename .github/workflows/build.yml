@@ -67,5 +67,6 @@ jobs:
         tf_actions_subcommand: 'apply'
         tf_actions_working_dir: ${{ env.tf_working_dir }}
         tf_actions_comment: true
+        args: -var=client_secret="${{ secrets.CLIENT_SECRET }}" -var=client_id="${{ secrets.CLIENT_ID }}" -var=subscription_id="${{ secrets.SUBSCRIPTION_ID }}" -var=tenant_id="${{ secrets.TENANT_ID }}"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
