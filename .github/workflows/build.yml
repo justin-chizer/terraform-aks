@@ -2,23 +2,32 @@ name: 'Terraform GitHub Actions'
 on:
   push:
     branches: [ master, dev ]
+  pull_request:
+    branches:
+      - master
+env:
+  tf_working_dir: './terraform'
 jobs:
-
-  build-and-deploy:
-    runs-on: ubuntu-latest
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-18.04
     steps:
-    - name: Azure Login
-    - uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-          
+    # - uses: azure/login@v1
+    #   with:
+    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # - run: |
+    #     az account list -o table
+       
     - name: 'Checkout'
-      uses: actions/checkout@master
+      uses: actions/checkout@v2
     - name: 'Terraform Format'
       uses: hashicorp/terraform-github-actions@master
       with:
         tf_actions_version: 0.12.24
         tf_actions_subcommand: 'fmt'
+        tf_actions_working_dir: ${{ env.tf_working_dir }}
+        tf_actions_comment: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: 'Terraform Init'
@@ -26,6 +35,9 @@ jobs:
       with:
         tf_actions_version: 0.12.24
         tf_actions_subcommand: 'init'
+        tf_actions_working_dir: ${{ env.tf_working_dir }}
+        tf_actions_comment: true
+        args: -backend-config=client_id="${{ secrets.CLIENT_ID  }}" -backend-config=client_secret="${{ secrets.CLIENT_SECRET  }}" -backend-config=tenant_id="${{ secrets.TENANT_ID  }}" -backend-config=subscription_id="${{ secrets.SUBSCRIPTION_ID  }}" 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: 'Terraform Validate'
@@ -33,6 +45,8 @@ jobs:
       with:
         tf_actions_version: 0.12.24
         tf_actions_subcommand: 'validate'
+        tf_actions_working_dir: ${{ env.tf_working_dir }}
+        tf_actions_comment: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: 'Terraform Plan'
@@ -40,5 +54,9 @@ jobs:
       with:
         tf_actions_version: 0.12.24
         tf_actions_subcommand: 'plan'
+        tf_actions_working_dir: ${{ env.tf_working_dir }}
+        tf_actions_comment: true
+        args: -var=client_secret="${{ secrets.CLIENT_SECRET }}" -var=client_id="${{ secrets.CLIENT_ID }}" -var=subscription_id="${{ secrets.SUBSCRIPTION_ID }}" -var=tenant_id="${{ secrets.TENANT_ID }}"
+        
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
