@@ -18,6 +18,7 @@ jobs:
 
     - run: |
         az account list -o table
+        echo ${{ secrets.AZURE_CREDENTIALS.client_id}}
 
     - name: 'Checkout'
       uses: actions/checkout@v2
