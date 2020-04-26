@@ -3,13 +3,15 @@ Upskilling in Terraform and GitHub Actions
 
 
 ## Goals of this repo
- :heavy_check_mark: Two peered VNets
- - [ ] One VNet containing AKS
- - [ ] One VNet with a Debian VM
+ - [x] Infrastructure is set up using Terraform 0.12.24, azurerm provider 2.7.0, and Azure CLI 2.4.0
+ - [x] Create two VNets with their own subnet. (Make sure the cidr range does not overlap)
+ - [x] Deploy an AKS cluster into one of the VNets
+ - [x] Deploy a Debian VM into the other VNet
  - [x] Set up Azure Bastion to connect to the Debian VM
- - [ ] Demonstrate the Debian VM is able to reach a node in AKS
- - [ ] Infrastructure is set up using Terraform 0.12.24, azurerm provider 2.6.0, and Azure CLI 2.4.0
- - [ ] Have GitHub Actions deploy Terraform with statefiles in appropriate backend Azure Storage Account
+ - [x] Demonstrate the Debian VM is able to reach a node in AKS
+ - [x] Have GitHub Actions deploy the infrastructure with statefiles in the appropriate backend Azure Storage Account
+ - [ ] Find the best way to store Azure Credentials. Azure KeyVault or GitHub Secrets?
+ - [ ] Improve the README
 
 
 
