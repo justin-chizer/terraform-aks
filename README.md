@@ -3,13 +3,13 @@ Upskilling in Terraform and GitHub Actions
 
 
 ## Goals of this repo
- - Two peered VNets
- - One VNet containing AKS
- - One VNet with a Debian VM
- - Set up Azure Bastion to connect to the Debian VM
- - Demonstrate the Debian VM is able to reach a node in AKS
- - Infrastructure is set up using Terraform 0.12.24, azurerm provider 2.6.0, and Azure CLI 2.4.0
- - Have GitHub Actions deploy Terraform with statefiles in appropriate backend Azure Storage Account
+ :heavy_check_mark: Two peered VNets
+ - [ ] One VNet containing AKS
+ - [ ] One VNet with a Debian VM
+ - [x] Set up Azure Bastion to connect to the Debian VM
+ - [ ] Demonstrate the Debian VM is able to reach a node in AKS
+ - [ ] Infrastructure is set up using Terraform 0.12.24, azurerm provider 2.6.0, and Azure CLI 2.4.0
+ - [ ] Have GitHub Actions deploy Terraform with statefiles in appropriate backend Azure Storage Account
 
 
 
@@ -40,13 +40,16 @@ curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
 ## GitHub Actions
 
-Create a Service Principal for Actions to use and store the JSON output as a secret in the repo as AZURE_CREDENTIALS
+Create a Service Principal for Actions to use and store the JSON output as a GitHub Secret in the repo as AZURE_CREDENTIALS
 
 ```bash
-az ad sp create-for-rbac
+az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/<SUBSCRIPTION_ID"
 {
     "clientId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     "clientSecret": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     "subscriptionId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     "tenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 }
+```
+
+Also store CLIENT_ID CLIENT_SECRET SUBSCRIPTION_ID and TENANT_ID each as their own GitHub Secret.
