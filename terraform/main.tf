@@ -68,19 +68,20 @@ resource "azurerm_network_interface" "vm" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = module.VNet-vm.virtual_network_id
+    subnet_id                     = module.VNet-vm.subnet_id
     private_ip_address_allocation = "Dynamic"
   }
 }
 
 
 resource "azurerm_linux_virtual_machine" "vm" {
-  name                = "debianvm"
-  resource_group_name = azurerm_resource_group.demo.name
-  location            = azurerm_resource_group.demo.location
-  size                = "Standard_D2S_v3"
-  admin_username      = "adminuser"
-  admin_password      = "Password!23"
+  name                            = "debianvm"
+  resource_group_name             = azurerm_resource_group.demo.name
+  location                        = azurerm_resource_group.demo.location
+  size                            = "Standard_D2S_v3"
+  admin_username                  = "adminuser"
+  admin_password                  = "Password!23"
+  disable_password_authentication = false
   network_interface_ids = [
     azurerm_network_interface.vm.id,
   ]
