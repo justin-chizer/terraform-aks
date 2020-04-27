@@ -3,15 +3,17 @@ Upskilling in Terraform and GitHub Actions
 
 
 ## Goals of this repo
- - [x] Infrastructure is set up using Terraform 0.12.24, azurerm provider 2.7.0, and Azure CLI 2.4.0
- - [x] Create two VNets with their own subnet. (Make sure the cidr range does not overlap)
- - [x] Deploy an AKS cluster into one of the VNets
- - [x] Deploy a Debian VM into the other VNet
- - [x] Set up Azure Bastion to connect to the Debian VM
- - [x] Demonstrate the Debian VM is able to reach a node in AKS
- - [x] Have GitHub Actions deploy the infrastructure with statefiles in the appropriate backend Azure Storage Account
+ - [x] Infrastructure is set up using Terraform 0.12.24, azurerm provider 2.7.0, and Azure CLI 2.4.0.
+ - [x] Create two VNets with their own subnet. (Make sure the cidr range does not overlap).
+ - [x] Deploy an AKS cluster into one of the VNets.
+ - [x] Deploy a Debian VM into the other VNet.
+ - [x] Set up Azure Bastion to connect to the Debian VM.
+ - [x] Demonstrate the Debian VM is able to reach a node in AKS.
+ - [x] Have GitHub Actions deploy the infrastructure with statefiles in the appropriate backend Azure Storage Account.
  - [ ] Find the best way to store Azure Credentials. Azure KeyVault or GitHub Secrets?
- - [ ] Improve the README
+ - [ ] Use Terraform Modules as much as possible to simplify main.tf
+ - [ ] Have a full dev to prod process with GitHub Actions and seperate statefiles.
+ - [ ] Improve the README.
 
 
 
@@ -42,9 +44,12 @@ curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
 ## GitHub Actions
 
+build.yml currently goes through a terraform fmt, init, validate, plan, and apply. 
+
 Create a Service Principal for Actions to use and store the JSON output as a GitHub Secret in the repo as AZURE_CREDENTIALS
 
 ```bash
+az account list -o table # To find your subscription id
 az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/<SUBSCRIPTION_ID"
 {
     "clientId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -54,4 +59,9 @@ az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/<SUBSCRIP
 }
 ```
 
-Also store CLIENT_ID CLIENT_SECRET SUBSCRIPTION_ID and TENANT_ID each as their own GitHub Secret.
+Also store: 
+- CLIENT_ID
+- CLIENT_SECRET
+- SUBSCRIPTION_ID 
+- TENANT_ID 
+each as their own GitHub Secret.
