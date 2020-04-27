@@ -13,6 +13,7 @@ Upskilling in Terraform and GitHub Actions
  - [ ] Find the best way to store Azure Credentials. Azure KeyVault or GitHub Secrets?
  - [ ] Use Terraform Modules as much as possible to simplify main.tf
  - [ ] Have a full dev to prod process with GitHub Actions and seperate statefiles.
+ - [ ] Verify our infrastructure has been deployed with the AZ CLI
  - [ ] Improve the README.
 
 
@@ -42,6 +43,12 @@ sudo apt-get update && sudo apt-get upgrade
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 ```
 
+## Create an Azure Storage Contianer
+
+Our storage account will store the Terraform state file for our deployment. 
+
+The [Create a Container](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-portal#create-a-container) tutorial will show you how to do this. Capture the values and place them in `./terraform/backend.tf`
+
 ## GitHub Actions
 
 build.yml currently goes through a terraform fmt, init, validate, plan, and apply. 
@@ -59,9 +66,8 @@ az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/<SUBSCRIP
 }
 ```
 
-Also store: 
+Also store each of the following as their own GitHub Secret:
 - CLIENT_ID
 - CLIENT_SECRET
 - SUBSCRIPTION_ID 
 - TENANT_ID 
-each as their own GitHub Secret.
