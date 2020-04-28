@@ -12,14 +12,7 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-18.04
-    steps:
-    # - uses: azure/login@v1
-    #   with:
-    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    # - run: |
-    #     az account list -o table
-       
+    steps:      
     - name: 'Checkout'
       uses: actions/checkout@v2
     - name: 'Terraform Format'
@@ -70,3 +63,15 @@ jobs:
         args: -var=client_secret="${{ secrets.CLIENT_SECRET }}" -var=client_id="${{ secrets.CLIENT_ID }}" -var=subscription_id="${{ secrets.SUBSCRIPTION_ID }}" -var=tenant_id="${{ secrets.TENANT_ID }}"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  terraformcheck:
+    needs: terraform
+    name: 'AZ CLI'
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - run: |
+        az group list --query "[?name=='disneydemo2']" | jq '.[].properties.provisioningState'
