@@ -1,3 +1,4 @@
+![Terraform GitHub Actions](https://github.com/justin-chizer/terraform-aks/workflows/Terraform%20GitHub%20Actions/badge.svg?branch=master)
 # terraform-aks
 Upskilling in Terraform and GitHub Actions
 
