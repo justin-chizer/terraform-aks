@@ -12,16 +12,17 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-18.04
-    steps:
-    # - uses: azure/login@v1
-    #   with:
-    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    # - run: |
-    #     az account list -o table
-       
+    steps:      
     - name: 'Checkout'
       uses: actions/checkout@v2
+    - uses: Azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - uses: Azure/get-keyvault-secrets@v1.0
+      with:
+        keyvault: "chizerkeys"
+        secrets: 'CLIENT-ID, CLIENT-SECRET, SUBSCRIPTION-ID, TENANT-ID'
+      id: myGetSecretAction
     - name: 'Terraform Format'
       uses: hashicorp/terraform-github-actions@master
       with:
@@ -38,7 +39,7 @@ jobs:
         tf_actions_subcommand: 'init'
         tf_actions_working_dir: ${{ env.tf_working_dir }}
         tf_actions_comment: true
-        args: -backend-config=client_id="${{ secrets.CLIENT_ID  }}" -backend-config=client_secret="${{ secrets.CLIENT_SECRET  }}" -backend-config=tenant_id="${{ secrets.TENANT_ID  }}" -backend-config=subscription_id="${{ secrets.SUBSCRIPTION_ID  }}" 
+        args: -backend-config=client_id="${{ steps.myGetSecretAction.outputs.CLIENT-ID  }}" -backend-config=client_secret="${{ steps.myGetSecretAction.outputs.CLIENT-SECRET  }}" -backend-config=tenant_id="${{ steps.myGetSecretAction.outputs.TENANT-ID  }}" -backend-config=subscription_id="${{ steps.myGetSecretAction.outputs.SUBSCRIPTION-ID  }}" 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: 'Terraform Validate'
@@ -57,7 +58,7 @@ jobs:
         tf_actions_subcommand: 'plan'
         tf_actions_working_dir: ${{ env.tf_working_dir }}
         tf_actions_comment: true
-        args: -var=client_secret="${{ secrets.CLIENT_SECRET }}" -var=client_id="${{ secrets.CLIENT_ID }}" -var=subscription_id="${{ secrets.SUBSCRIPTION_ID }}" -var=tenant_id="${{ secrets.TENANT_ID }}"
+        args: -var=client_secret="${{ steps.myGetSecretAction.outputs.CLIENT-SECRET }}" -var=client_id="${{ steps.myGetSecretAction.outputs.CLIENT-ID }}" -var=subscription_id="${{ steps.myGetSecretAction.outputs.SUBSCRIPTION-ID }}" -var=tenant_id="${{ steps.myGetSecretAction.outputs.TENANT-ID }}"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: 'Terraform Apply'
@@ -67,6 +68,26 @@ jobs:
         tf_actions_subcommand: 'apply'
         tf_actions_working_dir: ${{ env.tf_working_dir }}
         tf_actions_comment: true
-        args: -var=client_secret="${{ secrets.CLIENT_SECRET }}" -var=client_id="${{ secrets.CLIENT_ID }}" -var=subscription_id="${{ secrets.SUBSCRIPTION_ID }}" -var=tenant_id="${{ secrets.TENANT_ID }}"
+        args: -var=client_secret="${{ steps.myGetSecretAction.outputs.CLIENT-SECRET }}" -var=client_id="${{ steps.myGetSecretAction.outputs.CLIENT-ID }}" -var=subscription_id="${{ steps.myGetSecretAction.outputs.SUBSCRIPTION-ID }}" -var=tenant_id="${{ steps.myGetSecretAction.outputs.TENANT-ID }}"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  terraformcheck:
+    #needs: terraform
+    name: 'AZ CLI'
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Azure login  
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Azure CLI check
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.3.1
+        inlineScript: |
+          az group list --query "[?name=='terraformsa']" | jq '.[].properties.provisioningState'
+          az group list --query "[?name=='disneydemo2']" | jq '.[].properties.provisioningState'
+          az vm list --query "[?name=='debianvm']" | jq '.[].provisioningState'
+          az aks list --query "[?name=='aksdemoapril']" | jq '.[].provisioningState'
+
