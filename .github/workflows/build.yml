@@ -9,60 +9,68 @@ env:
   tf_working_dir: './terraform'
   tf_actions_version: 0.12.24
 jobs:
-  # terraform:
-  #   name: 'Terraform'
-  #   runs-on: ubuntu-18.04
-  #   steps:      
-  #   - name: 'Checkout'
-  #     uses: actions/checkout@v2
-  #   - name: 'Terraform Format'
-  #     uses: hashicorp/terraform-github-actions@master
-  #     with:
-  #       tf_actions_version: ${{ env.tf_actions_version }}
-  #       tf_actions_subcommand: 'fmt'
-  #       tf_actions_working_dir: ${{ env.tf_working_dir }}
-  #       tf_actions_comment: true
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #   - name: 'Terraform Init'
-  #     uses: hashicorp/terraform-github-actions@master
-  #     with:
-  #       tf_actions_version: ${{ env.tf_actions_version }}
-  #       tf_actions_subcommand: 'init'
-  #       tf_actions_working_dir: ${{ env.tf_working_dir }}
-  #       tf_actions_comment: true
-  #       args: -backend-config=client_id="${{ secrets.CLIENT_ID  }}" -backend-config=client_secret="${{ secrets.CLIENT_SECRET  }}" -backend-config=tenant_id="${{ secrets.TENANT_ID  }}" -backend-config=subscription_id="${{ secrets.SUBSCRIPTION_ID  }}" 
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #   - name: 'Terraform Validate'
-  #     uses: hashicorp/terraform-github-actions@master
-  #     with:
-  #       tf_actions_version: ${{ env.tf_actions_version }}
-  #       tf_actions_subcommand: 'validate'
-  #       tf_actions_working_dir: ${{ env.tf_working_dir }}
-  #       tf_actions_comment: true
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #   - name: 'Terraform Plan'
-  #     uses: hashicorp/terraform-github-actions@master
-  #     with:
-  #       tf_actions_version: ${{ env.tf_actions_version }}
-  #       tf_actions_subcommand: 'plan'
-  #       tf_actions_working_dir: ${{ env.tf_working_dir }}
-  #       tf_actions_comment: true
-  #       args: -var=client_secret="${{ secrets.CLIENT_SECRET }}" -var=client_id="${{ secrets.CLIENT_ID }}" -var=subscription_id="${{ secrets.SUBSCRIPTION_ID }}" -var=tenant_id="${{ secrets.TENANT_ID }}"
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #   - name: 'Terraform Apply'
-  #     uses: hashicorp/terraform-github-actions@master
-  #     with:
-  #       tf_actions_version: ${{ env.tf_actions_version }}
-  #       tf_actions_subcommand: 'apply'
-  #       tf_actions_working_dir: ${{ env.tf_working_dir }}
-  #       tf_actions_comment: true
-  #       args: -var=client_secret="${{ secrets.CLIENT_SECRET }}" -var=client_id="${{ secrets.CLIENT_ID }}" -var=subscription_id="${{ secrets.SUBSCRIPTION_ID }}" -var=tenant_id="${{ secrets.TENANT_ID }}"
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-18.04
+    steps:      
+    - name: 'Checkout'
+      uses: actions/checkout@v2
+    - uses: Azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - uses: Azure/get-keyvault-secrets@v1.0
+      with:
+        keyvault: "chizerkeys"
+        secrets: 'CLIENT-ID, CLIENT-SECRET, SUBSCRIPTION-ID, TENANT-ID'
+      id: myGetSecretAction
+    - name: 'Terraform Format'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: ${{ env.tf_actions_version }}
+        tf_actions_subcommand: 'fmt'
+        tf_actions_working_dir: ${{ env.tf_working_dir }}
+        tf_actions_comment: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: 'Terraform Init'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: ${{ env.tf_actions_version }}
+        tf_actions_subcommand: 'init'
+        tf_actions_working_dir: ${{ env.tf_working_dir }}
+        tf_actions_comment: true
+        args: -backend-config=client_id="${{ steps.myGetSecretAction.outputs.CLIENT-ID  }}" -backend-config=client_secret="${{ steps.myGetSecretAction.outputs.CLIENT-SECRET  }}" -backend-config=tenant_id="${{ steps.myGetSecretAction.outputs.TENANT-ID  }}" -backend-config=subscription_id="${{ steps.myGetSecretAction.outputs.SUBSCRIPTION-ID  }}" 
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: 'Terraform Validate'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: ${{ env.tf_actions_version }}
+        tf_actions_subcommand: 'validate'
+        tf_actions_working_dir: ${{ env.tf_working_dir }}
+        tf_actions_comment: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: 'Terraform Plan'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: ${{ env.tf_actions_version }}
+        tf_actions_subcommand: 'plan'
+        tf_actions_working_dir: ${{ env.tf_working_dir }}
+        tf_actions_comment: true
+        args: -var=client_secret="${{ steps.myGetSecretAction.outputs.CLIENT-SECRET }}" -var=client_id="${{ steps.myGetSecretAction.outputs.CLIENT-ID }}" -var=subscription_id="${{ steps.myGetSecretAction.outputs.SUBSCRIPTION-ID }}" -var=tenant_id="${{ steps.myGetSecretAction.outputs.TENANT-ID }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: 'Terraform Apply'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: ${{ env.tf_actions_version }}
+        tf_actions_subcommand: 'apply'
+        tf_actions_working_dir: ${{ env.tf_working_dir }}
+        tf_actions_comment: true
+        args: -var=client_secret="${{ steps.myGetSecretAction.outputs.CLIENT-SECRET }}" -var=client_id="${{ steps.myGetSecretAction.outputs.CLIENT-ID }}" -var=subscription_id="${{ steps.myGetSecretAction.outputs.SUBSCRIPTION-ID }}" -var=tenant_id="${{ steps.myGetSecretAction.outputs.TENANT-ID }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   terraformcheck:
     #needs: terraform
