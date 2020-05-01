@@ -78,6 +78,7 @@ jobs:
       with:
         azcliversion: 2.3.1
         inlineScript: |
+          az group list --query "[?name=='terraformsa']" | jq '.[].properties.provisioningState'
           az group list --query "[?name=='disneydemo2']" | jq '.[].properties.provisioningState'
           az vm list --query "[?name=='debianvm']" | jq '.[].provisioningState'
           az aks list --query "[?name=='aksdemoapril']" | jq '.[].provisioningState'
