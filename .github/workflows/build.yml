@@ -7,7 +7,7 @@ on:
       - master
 env:
   tf_working_dir: './terraform'
-  tf_actions_version: 0.12.24
+  tf_actions_version: 0.13.5
 jobs:
   terraform:
     name: 'Terraform'
@@ -18,7 +18,7 @@ jobs:
     - uses: Azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-    - uses: Azure/get-keyvault-secrets@v1.0
+    - uses: Azure/get-keyvault-secrets@v1
       with:
         keyvault: "chizerkeys"
         secrets: 'CLIENT-ID, CLIENT-SECRET, SUBSCRIPTION-ID, TENANT-ID'
